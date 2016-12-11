@@ -1,0 +1,78 @@
+Reproducible Research
+=====================
+
+### Loading and preprocessing data
+
+`{r, echo= TRUE} unzip(zipfile="activity.zip") data<-read.csv(file="activity.csv")`
+
+### What is mean total number of steps taken per day?
+
+`{r activity,echo=TRUE} total.steps <- tapply(data$steps, data$date,sum, na.rm=TRUE) library(ggplot2) qplot(total.steps,binwidth=1000,xlab="Total steps per day",ylab="Frequency") mean(total.steps,na.rm=TRUE) median(total.steps,na.rm=TRUE)`
+\#\#\# What is the average daily activity pattern? \`\`\`{r
+data,echo=TRUE}
+
+library(ggplot2) averages &lt;-
+aggregate(x=list(steps=data*s**t**e**p**s*),*b**y* = *l**i**s**t*(*i**n**t**e**r**v**a**l* = *d**a**t**a*interval),
+FUN=mean, na.rm=TRUE) ggplot(data=averages, aes(x=interval, y=steps)) +
+geom\_line() + xlab("5-minute interval") + ylab("average number of steps
+taken")
+
+On average across all the days in the dataset, the 5-minute interval contains the maximum number of steps?
+==========================================================================================================
+
+averages\[which.max(averages$steps),\] \`\`\` \#\#\# Imputing missing
+values there are a number of days/intervals where there are missing
+values. The presence of missing days may introduce bias into some
+calculations or summaries of the data
+
+`{r averages,echo=TRUE} missing_values<-is.na(data$steps) table(missing_values)`
+
+All of the missing values are filled in with mean value for that
+5-minute interval.
+
+\`\`\` {r missing\_values,echo=TRUE} \# Replace each missing value with
+the mean value of its 5-minute interval
+
+fill.value &lt;- function(steps, interval) { filled &lt;- NA if
+(!is.na(steps)) filled &lt;- c(steps) else filled &lt;-
+(averages\[averages$interval==interval, "steps"\]) return(filled) }
+filled.data &lt;- data
+filled.data*s**t**e**p**s* &lt; −*m**a**p**p**l**y*(*f**i**l**l*.*v**a**l**u**e*, *f**i**l**l**e**d*.*d**a**t**a*steps,
+filled.data$interval)
+
+Now, using the filled data set, let's make a histogram of the total number of steps taken each day and calculate the mean and median total number of steps.
+===========================================================================================================================================================
+
+total.steps &lt;-
+tapply(filled.data*s**t**e**p**s*, *f**i**l**l**e**d*.*d**a**t**a*date,
+FUN=sum) qplot(total.steps, binwidth=1000, xlab="total number of steps
+taken each day") mean(total.steps) median(total.steps)
+
+\`\`\` Mean and median values are higher after imputing missing data.
+The reason is that in the original data, there are some days with steps
+values NA for any interval. The total number of steps taken in such days
+are set to 0s by default. However, after replacing missing steps values
+with the mean steps of associated interval value, these 0 values are
+removed from the histogram of total number of steps taken each day.
+
+### Are there differences in activity patterns between weekdays and weekends?
+
+\`\`\` {r filled.data,echo=TRUE} \#First, let's find the day of the week
+for each measurement in the dataset. In this part, we use the dataset
+with the filled-in values.
+
+weekday.or.weekend &lt;- function(date) { day &lt;- weekdays(date) if
+(day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"))
+return("weekday") else if (day %in% c("Saturday", "Sunday"))
+return("weekend") else stop("invalid date") }
+filled.data*d**a**t**e* &lt; −*a**s*.*D**a**t**e*(*f**i**l**l**e**d*.*d**a**t**a*date)
+filled.data*d**a**y* &lt; −*s**a**p**p**l**y*(*f**i**l**l**e**d*.*d**a**t**a*date,
+FUN = weekday.or.weekend)
+
+Now, let's make a panel plot containing plots of average number of steps taken on weekdays and weekends.
+========================================================================================================
+
+averages &lt;- aggregate(steps ~ interval + day, data = filled.data,
+mean) ggplot(averages, aes(interval, steps)) + geom\_line() +
+facet\_grid(day ~ .) + xlab("5-minute interval") + ylab("Number of
+steps") \`\`\`
